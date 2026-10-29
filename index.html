@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Common Security Threats – Activity Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Traffic-ops theme. Always light. */
+:root{
+  color-scheme:light;
+  --bg:#f5f7fb; --surface:#ffffff; --surface-2:#eef2f9; --border:#dde4ef; --border-2:#c4d0e2; --line:#e4e9f2;
+  --text:#152037; --muted:#5c6b86; --faint:#8a98b2;
+  --primary:#2f3aa3; --primary-dark:#232c82; --primary-soft:#e9ebfa; --primary-ink:#ffffff; --accent:#0e8fb0; --accent-soft:#e2f4f9;
+  --good:#167a4e; --good-soft:#e4f6ed; --good-border:#9bd8b8; --bad:#c22f28; --bad-soft:#fdecea; --bad-border:#f1b5af;
+  --warn:#9a6400; --warn-soft:#fff4df; --warn-border:#f0d6a0; --attack:#d64027; --attack-soft:#fdeae6; --legit:#167a4e;
+  --topbar:rgba(245,247,251,.9);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:light;
+  --bg:#f5f7fb; --surface:#ffffff; --surface-2:#eef2f9; --border:#dde4ef; --border-2:#c4d0e2; --line:#e4e9f2;
+  --text:#152037; --muted:#5c6b86; --faint:#8a98b2;
+  --primary:#2f3aa3; --primary-dark:#232c82; --primary-soft:#e9ebfa; --primary-ink:#ffffff; --accent:#0e8fb0; --accent-soft:#e2f4f9;
+  --good:#167a4e; --good-soft:#e4f6ed; --good-border:#9bd8b8; --bad:#c22f28; --bad-soft:#fdecea; --bad-border:#f1b5af;
+  --warn:#9a6400; --warn-soft:#fff4df; --warn-border:#f0d6a0; --attack:#d64027; --attack-soft:#fdeae6; --legit:#167a4e; --topbar:rgba(245,247,251,.9);}}
+:root[data-theme="dark"]{color-scheme:light;
+  --bg:#f5f7fb; --surface:#ffffff; --surface-2:#eef2f9; --border:#dde4ef; --border-2:#c4d0e2; --line:#e4e9f2;
+  --text:#152037; --muted:#5c6b86; --faint:#8a98b2;
+  --primary:#2f3aa3; --primary-dark:#232c82; --primary-soft:#e9ebfa; --primary-ink:#ffffff; --accent:#0e8fb0; --accent-soft:#e2f4f9;
+  --good:#167a4e; --good-soft:#e4f6ed; --good-border:#9bd8b8; --bad:#c22f28; --bad-soft:#fdecea; --bad-border:#f1b5af;
+  --warn:#9a6400; --warn-soft:#fff4df; --warn-border:#f0d6a0; --attack:#d64027; --attack-soft:#fdeae6; --legit:#167a4e; --topbar:rgba(245,247,251,.9);}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 74px);background:#f5f7fb}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--topbar)}
+img,svg{max-width:100%}
+h1,h2,h3,h4{font-family:"Space Grotesk","Inter",system-ui,sans-serif;margin:0 0 .5em;line-height:1.2;font-weight:700;letter-spacing:-.01em}
+h1{font-size:clamp(1.9rem,5vw,2.9rem)}
+h2{font-size:clamp(1.35rem,3vw,1.75rem)}
+h3{font-size:1.14rem}
+h4{font-size:1rem}
+p{margin:0 0 .8em}
+b,strong{font-weight:600}
+.mono,code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+code{font-size:.85em;background:var(--surface-2);border:1px solid var(--border);padding:.03em .35em;border-radius:5px;word-break:break-word}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:840px;margin:0 auto;padding:22px 20px 72px}
+.small{font-size:.88rem}.muted{color:var(--muted)}
+.row{display:flex;align-items:center;gap:10px}.row.wrap{flex-wrap:wrap}.between{justify-content:space-between}.end{justify-content:flex-end}.center{justify-content:center}
+.stack>*+*{margin-top:16px}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--topbar);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:840px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;background:none;border:0;padding:0;cursor:pointer;color:var(--text);text-align:left}
+.brand:disabled{cursor:default}
+.brand-ic{width:28px;height:28px;border-radius:8px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:14px;flex:none}
+.brand-t{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:.98rem;line-height:1}
+.brand-t small{display:block;font-weight:400;font-size:.76rem;color:var(--muted);margin-top:2px;font-family:"Inter"}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tb-steps{font-size:.82rem;color:var(--muted);font-weight:600}.tb-steps b{color:var(--primary)}
+.student{font-size:.84rem;line-height:1.15;text-align:right}.student small{display:block;color:var(--muted)}
+
+/* Blocks */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:clamp(18px,3.2vw,28px)}
+.bare{padding:2px 0}
+.eyebrow{font-size:.76rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.lead{font-size:1.06rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted)}
+.pill.on{background:var(--primary-soft);border-color:#c7ccf0;color:var(--primary)}
+.pill.att{background:var(--attack-soft);border-color:var(--bad-border);color:var(--attack)}
+.rail{height:4px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.rail>i{display:block;height:100%;background:var(--primary);transition:width .4s ease}
+.btn{appearance:none;border:1px solid var(--primary);border-radius:10px;padding:11px 18px;font-size:.96rem;font-weight:600;cursor:pointer;background:var(--primary);color:var(--primary-ink);display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:background .18s,border-color .18s}
+.btn:hover{background:var(--primary-dark);border-color:var(--primary-dark)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--primary);border-color:var(--border-2)}
+.btn-ghost:hover{background:var(--primary-soft)}
+.btn-quiet{background:transparent;color:var(--muted);border-color:var(--border)}
+.btn-quiet:hover{background:var(--surface-2);color:var(--text)}
+.btn-attack{background:var(--attack);border-color:var(--attack);color:#fff}
+.btn-attack:hover{background:#b7301c;border-color:#b7301c}
+.btn-sm{padding:7px 13px;font-size:.88rem;border-radius:8px}
+.field label{font-weight:600;font-size:.9rem;display:block;margin-bottom:6px}
+.input,textarea.ta{font:inherit;padding:11px 13px;border-radius:9px;border:1px solid var(--border-2);background:var(--surface);color:var(--text);outline:none;width:100%;transition:border .18s}
+.input:focus,textarea.ta:focus{border-color:var(--accent)}
+.err{color:var(--bad);font-size:.88rem;font-weight:600;min-height:1.2em;margin-top:6px}
+input[type=range]{width:100%;accent-color:var(--primary);height:26px}
+
+/* Welcome / overview */
+.facts{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:7px}
+.facts li{display:flex;gap:9px;align-items:baseline;font-size:.96rem}
+.facts li::before{content:"▸";color:var(--accent);font-weight:700}
+.who-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.obj{margin:0;padding:0;list-style:none;display:grid;gap:7px;counter-reset:o}
+.obj li{display:flex;gap:10px;font-size:.96rem}
+.obj li::before{content:counter(o);counter-increment:o;flex:none;width:22px;height:22px;border-radius:6px;background:var(--primary-soft);color:var(--primary);font-size:.78rem;font-weight:700;display:grid;place-items:center}
+.marks{width:100%;border-collapse:collapse;font-size:.92rem}
+.marks th,.marks td{padding:9px 2px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.marks tr:last-child td{border-bottom:0}
+.marks th{font-weight:600;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+.path{display:grid;gap:10px}
+.pcard{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface)}
+.pcard.locked{opacity:.55}
+.pnum{width:30px;height:30px;border-radius:8px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:.95rem;font-family:"Space Grotesk"}
+.pcard.quiz .pnum{background:var(--primary);color:var(--primary-ink)}
+.ptitle{font-weight:600;font-size:1rem}
+.pmeta{font-size:.82rem;color:var(--muted);margin-top:2px}
+
+/* Step */
+.crumbs{font-size:.82rem;color:var(--muted);margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.key{border-left:3px solid var(--accent);padding:4px 0 4px 14px;margin-top:14px}
+.key b{color:var(--primary)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.box{border:1px solid var(--border);border-radius:11px;padding:13px 15px;background:var(--surface-2)}
+.box h4{color:var(--primary);margin-bottom:3px}
+.defn{display:grid;gap:8px;margin:10px 0}
+.defn .d{border:1px solid var(--border);border-radius:11px;padding:11px 14px;font-size:.93rem}
+.defn .d b{color:var(--primary)}
+.warnline{background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:9px;padding:8px 12px;font-size:.88rem;margin-bottom:12px}
+.actwrap{border:1px solid var(--border-2);border-radius:13px;padding:clamp(15px,3vw,22px);margin-top:4px;background:var(--surface)}
+.act-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.act-label{font-size:.76rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.badge{display:none;font-size:.8rem;font-weight:600;color:var(--good);align-items:center;gap:5px}
+.actwrap.done .badge{display:inline-flex}
+.task{font-weight:600;font-size:.98rem;margin-bottom:14px}
+.hintarea{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-2)}
+.hintbox{background:var(--surface-2);border:1px solid var(--border);padding:9px 13px;border-radius:9px;margin-top:9px;font-size:.92rem;animation:fade .2s}
+.fb{padding:11px 14px;border-radius:9px;margin-top:11px;font-size:.94rem;border:1px solid var(--border);background:var(--surface-2);animation:fade .2s}
+.fb.good{background:var(--good-soft);border-color:var(--good-border);color:#0f5537}
+.fb.bad{background:var(--bad-soft);border-color:var(--bad-border);color:#8a211b}
+.fb .act-next{margin-top:9px}
+.stepnav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px}
+.dots{display:flex;gap:5px}
+.dots i{width:7px;height:7px;border-radius:99px;background:var(--border-2);transition:.3s}
+.dots i.ok{background:var(--accent)}.dots i.on{width:20px;background:var(--primary)}
+.part{margin:18px 0 9px;font-size:.98rem;font-weight:700;color:var(--primary);font-family:"Space Grotesk"}
+.part:first-child{margin-top:0}
+
+/* Tasks / missions */
+.tasks{display:grid;gap:6px;margin-top:14px}
+.tk{display:flex;gap:9px;align-items:center;font-size:.92rem;font-weight:500;color:var(--muted)}
+.tick{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border-2);display:grid;place-items:center;font-size:.72rem;flex:none;color:transparent;transition:.2s}
+.tk.ok{color:var(--good)}.tk.ok .tick{background:var(--good);border-color:var(--good);color:#fff}
+.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:flex-end;margin:4px 0 2px}
+.ctl{flex:1 1 200px}
+.ctl label{font-size:.84rem;font-weight:600;display:flex;justify-content:space-between;gap:8px;margin-bottom:2px}
+.ctl label b{font-family:"JetBrains Mono";color:var(--primary)}
+.toggle{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:.92rem;cursor:pointer;border:1px solid var(--border-2);border-radius:10px;padding:9px 13px;background:var(--surface)}
+.toggle input{display:none}
+.toggle .sw{width:38px;height:22px;border-radius:999px;background:var(--border-2);position:relative;transition:.2s;flex:none}
+.toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on .sw{background:var(--good)}.toggle.on .sw::after{left:18px}
+
+/* Meters / gauges */
+.meterbox{display:grid;gap:4px;margin:12px 0}
+.meterbox .mh{display:flex;justify-content:space-between;font-size:.86rem;font-weight:600}
+.meterbox .mh .v{font-family:"JetBrains Mono"}
+.meter{height:18px;border-radius:7px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden;position:relative}
+.meter>i{display:block;height:100%;width:0;transition:width .3s,background .3s;background:var(--primary)}
+.meter .cap{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);opacity:.55}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-top:10px}
+.stat{border:1px solid var(--border);border-radius:11px;padding:9px 12px;background:var(--surface)}
+.stat .k{font-size:.8rem;color:var(--muted);font-weight:600}
+.stat .v{font-size:1.25rem;font-weight:700;font-family:"JetBrains Mono"}
+.stat.att .v{color:var(--attack)}.stat.leg .v{color:var(--legit)}
+.statusline{font-weight:600;border-radius:9px;padding:9px 13px;margin-top:10px;font-size:.95rem}
+.statusline.up{background:var(--good-soft);color:#0f5537;border:1px solid var(--good-border)}
+.statusline.down{background:var(--bad-soft);color:#8a211b;border:1px solid var(--bad-border)}
+.statusline.warn{background:var(--warn-soft);color:#7a4f00;border:1px solid var(--warn-border)}
+
+/* Diagram (attack surface) */
+.diagram svg{display:block;width:100%;height:auto}
+.zone{cursor:pointer}
+.zone rect,.zone circle{transition:.15s}
+.zone:hover .hit{stroke:var(--accent);stroke-width:3}
+.zone.pick .hit{fill:var(--accent-soft);stroke:var(--accent);stroke-width:3}
+.zlabel{font-family:"Inter";font-size:13px;font-weight:600;fill:var(--text)}
+.zsub{font-family:"Inter";font-size:11px;fill:var(--muted)}
+
+/* Connection-table / slots grid */
+.slots{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
+.slot{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--border-2);background:var(--surface);display:grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--faint);transition:.15s}
+.slot.half{background:var(--attack-soft);border-color:var(--bad-border);color:var(--attack)}
+.slot.est{background:var(--good-soft);border-color:var(--good-border);color:var(--good)}
+.slot.legit{background:var(--primary-soft);border-color:#c7ccf0;color:var(--primary)}
+
+/* Packet triage */
+.pkt{border:1px solid var(--border-2);border-radius:11px;padding:11px 13px;background:var(--surface);margin-bottom:9px}
+.pkt .hd{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:"JetBrains Mono";font-size:.84rem;margin-bottom:8px}
+.pkt .hd span b{color:var(--primary)}
+.pkt .acts{display:flex;gap:8px}
+.pktbtn{font-size:.88rem;font-weight:600;border:1px solid var(--border-2);background:var(--surface);border-radius:8px;padding:7px 13px;cursor:pointer;color:var(--text)}
+.pktbtn:hover{border-color:var(--accent)}
+.pkt.ok{border-color:var(--good-border);background:var(--good-soft)}
+.pkt.no{border-color:var(--bad-border);background:var(--bad-soft)}
+.pkt .verdict{font-size:.9rem;margin-top:8px}
+
+/* Traffic chart */
+.chartwrap{border:1px solid var(--border);border-radius:11px;background:var(--surface);padding:8px;overflow-x:auto}
+.chartwrap svg{display:block;width:100%;min-width:420px;height:auto}
+.band{fill:transparent;cursor:pointer}
+.band:hover{fill:var(--accent-soft);fill-opacity:.5}
+.band.pick{fill:var(--accent-soft);fill-opacity:.7}
+.cl{fill:none;stroke:var(--primary);stroke-width:2.5}
+
+/* Nodes (reflection / botnet) */
+.netrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0}
+.node{flex:1 1 0;text-align:center;border:1.5px solid var(--border-2);border-radius:12px;padding:12px 8px;background:var(--surface);font-weight:600;font-size:.9rem;transition:.2s}
+.node .ic{font-size:26px;display:block;line-height:1}
+.node .ip{font-family:"JetBrains Mono";font-size:.76rem;color:var(--muted);margin-top:2px}
+.node.hit{border-color:var(--attack);background:var(--attack-soft);box-shadow:0 0 0 3px var(--bad-soft)}
+.node.safe{border-color:var(--good-border);background:var(--good-soft)}
+.arrow{flex:0 0 42px;text-align:center;color:var(--muted);font-weight:700}
+.arrow.att{color:var(--attack)}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{font-size:.9rem;font-weight:600;border:0;background:transparent;color:var(--muted);padding:8px 13px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+/* IP block list */
+.iplist{display:grid;gap:7px;margin:10px 0}
+.iprow{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border-2);border-radius:10px;padding:8px 12px;background:var(--surface);font-family:"JetBrains Mono";font-size:.9rem}
+.iprow.blocked{opacity:.5;background:var(--surface-2)}
+.iprow.blocked .ipstate{color:var(--good)}
+.ipstate{font-family:"Inter";font-weight:600;font-size:.82rem;color:var(--attack)}
+
+/* amp calculator */
+.ampout{display:grid;gap:8px;margin-top:12px}
+.ampbar{height:16px;border-radius:7px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
+.ampbar>i{display:block;height:100%;transition:width .35s,background .35s}
+.ampbig{font-family:"Space Grotesk";font-weight:700;font-size:1.5rem}
+
+/* Choice */
+.cq-top{display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--muted)}.cq-top .rail{flex:1}
+.cq-q{font-size:1.02rem;margin:12px 0}
+.opts{display:grid;gap:9px}
+.opt{font-size:.96rem;font-weight:500;padding:11px 14px;border-radius:9px;border:1px solid var(--border-2);background:var(--surface);color:var(--text);cursor:pointer;text-align:left;line-height:1.4;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--good);background:var(--good-soft);color:#0f5537}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:#8a211b}
+
+/* Done */
+.done-head{text-align:center;padding:6px 0 2px}
+.check{width:46px;height:46px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:22px;margin:0 auto 10px}
+.take{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.take li{display:flex;gap:9px;font-size:.95rem}.take li::before{content:"✓";color:var(--good);font-weight:700}
+
+/* Quiz / result */
+.qprompt{font-size:1.1rem;margin:12px 0}
+.qopts{display:grid;gap:9px}
+.qopt{display:flex;gap:11px;align-items:center;text-align:left;font-size:.96rem;padding:11px 13px;border-radius:10px;border:1px solid var(--border-2);background:var(--surface);color:var(--text);cursor:pointer;transition:.15s}
+.qopt:hover:not(:disabled){border-color:var(--accent);background:var(--surface-2)}
+.qopt:disabled{cursor:default}
+.ltr{width:27px;height:27px;border-radius:7px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;font-size:.85rem;flex:none;border:1px solid var(--border)}
+.qopt.sel{border-color:var(--primary);background:var(--primary-soft)}.qopt.sel .ltr{background:var(--primary);color:#fff;border-color:var(--primary)}
+.qopt.right{border-color:var(--good);background:var(--good-soft)}.qopt.right .ltr{background:var(--good);color:#fff}
+.qopt.wrong{border-color:var(--bad);background:var(--bad-soft)}.qopt.wrong .ltr{background:var(--bad);color:#fff}
+.ring{width:140px;height:140px;border-radius:50%;background:conic-gradient(var(--primary) calc(var(--p)*1%),var(--surface-2) 0);display:grid;place-items:center;margin:0 auto}
+.ring>div{width:112px;height:112px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;line-height:1}
+.ring b{font-family:"Space Grotesk";font-size:2.3rem;color:var(--primary)}
+.ring span{display:block;color:var(--muted);font-size:.9rem;margin-top:3px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.kv div{border:1px solid var(--border);border-radius:9px;padding:8px 11px}
+.kv small{display:block;color:var(--muted);font-size:.8rem}.kv b{font-size:.98rem;font-weight:600;word-break:break-word}
+.status-pass{color:var(--good)}.status-fail{color:var(--bad)}
+.review{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.review li{border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-size:.92rem}
+.review .yes{color:var(--good);font-weight:600}.review .no{color:var(--bad);font-weight:600}
+.copybox{width:100%;min-height:140px;font-family:"JetBrains Mono";font-size:.82rem;border-radius:10px;border:1px solid var(--border-2);padding:11px;background:var(--surface);color:var(--text);margin-top:10px}
+.foot{text-align:center;color:var(--faint);font-size:.82rem;padding:0 20px 28px}
+.screen{animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shake .35s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:620px){
+  .two,.who-grid,.kv{grid-template-columns:1fr}
+  .pcard{grid-template-columns:auto 1fr}.pcard .btn{grid-column:1/-1}
+  .slots{grid-template-columns:repeat(4,1fr)}
+  .tb-steps{display:none}
+  .netrow{flex-wrap:wrap}.arrow{flex-basis:100%;transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<main id="app" class="wrap"></main>
+<footer class="foot">A safe, simulated network lab — nothing here sends real traffic. Progress is saved in this browser only; on a shared computer, choose “Different student”.</footer>
+
+<script>
+(function(){
+"use strict";
+const rootEl=document.documentElement;
+function forceLight(){ if(rootEl.getAttribute("data-theme")!=="light") rootEl.setAttribute("data-theme","light"); }
+forceLight(); try{ new MutationObserver(forceLight).observe(rootEl,{attributes:true,attributeFilter:["data-theme"]}); }catch(e){}
+
+const KEY="cst-activity-lab-v1", TOTAL=15;
+const app=document.getElementById("app"), topbar=document.getElementById("topbar");
+function fresh(){ return {name:"",roll:"",maxPos:-1,done:{},results:[]}; }
+let S=fresh();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const v=localStorage.getItem(KEY); if(v){ const o=JSON.parse(v); if(o&&typeof o==="object") S=Object.assign(fresh(),o); } }catch(e){} }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function shake(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+function block(html){ const d=document.createElement("div"); d.innerHTML=html; return d; }
+function doneCount(){ return Object.keys(S.done).filter(k=>S.done[k]).length; }
+let mode="welcome";
+
+/* choiceQuiz: safe container, no el() */
+function choiceQuiz(root, cfg){
+  const items=cfg.items; let i=0,first=0,missed=false;
+  const wrap=document.createElement("div"); root.appendChild(wrap);
+  function show(){
+    if(i>=items.length){ wrap.innerHTML=`<div class="fb good">All ${items.length} correct — first try: <b>${first}/${items.length}</b>.</div>`; if(cfg.onDone) cfg.onDone(); return; }
+    const it=items[i]; missed=false;
+    let opts=(it.opts||cfg.options).slice(); if(cfg.shuffle) opts=shuffle(opts);
+    wrap.innerHTML=`<div class="cq-top"><span>${i+1}/${items.length}</span><span class="rail"><i style="width:${i/items.length*100}%"></i></span></div>
+      <div class="cq-q">${it.q}</div><div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join("")}</div><div class="cqfb" aria-live="polite"></div>`;
+    const fb=wrap.querySelector(".cqfb");
+    wrap.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>{
+      const o=opts[+b.dataset.k];
+      if(o===it.a){ if(!missed) first++; wrap.querySelectorAll(".opt").forEach(x=>x.disabled=true); b.classList.add("right");
+        fb.innerHTML=`<div class="fb good">${it.why}<div class="act-next"><button class="btn btn-sm">${i+1<items.length?"Next":"Finish"}</button></div></div>`;
+        fb.querySelector("button").addEventListener("click",()=>{ i++; show(); });
+      } else { missed=true; b.classList.add("wrong"); b.disabled=true; shake(b); fb.innerHTML=`<div class="fb bad">${it.hint||cfg.hint||"Try another option."}</div>`; }
+    }));
+  }
+  show();
+}
+function meter(id,label,color){ return `<div class="meterbox"><div class="mh"><span>${label}</span><span class="v" id="${id}v"></span></div><div class="meter"><i id="${id}" style="background:${color}"></i><span class="cap" id="${id}cap" hidden></span></div></div>`; }
+
+/* ============ LESSON 1 ============ */
+
+/* 1.0 — live capacity simulator */
+function a_capacity(root, api){
+  const CAP=100; let m1=false,m2=false;
+  root.innerHTML=`<p class="small muted">A server can handle <b>${CAP} requests/second</b>. Push the attack traffic up and watch what happens to the <b>real users</b>.</p>
+    <div class="controls">
+      <div class="ctl"><label>Legitimate traffic <b id="lL">40</b> req/s</label><input type="range" id="leg" min="0" max="90" value="40"></div>
+      <div class="ctl"><label>Attack flood <b id="aL">0</b> req/s</label><input type="range" id="att" min="0" max="500" value="0"></div>
+    </div>
+    <label class="toggle" id="scrubT" style="margin:6px 0"><input type="checkbox" id="scrub"><span class="sw"></span>🧽 Traffic scrubbing (filter out the flood)</label>
+    ${meter("load","Total incoming vs server capacity","var(--primary)")}
+    <div class="stat-row">
+      <div class="stat leg"><div class="k">Real users served</div><div class="v" id="served">100%</div></div>
+      <div class="stat att"><div class="k">Requests dropped</div><div class="v" id="drop">0</div></div>
+    </div>
+    <div class="statusline up" id="status">✅ Service healthy</div>
+    <div class="tasks">
+      <div class="tk" id="t1"><span class="tick">✓</span>Overwhelm the server so fewer than half the real users get served</div>
+      <div class="tk" id="t2"><span class="tick">✓</span>Turn on traffic scrubbing and bring real users back to 100%</div>
+    </div>`;
+  const leg=root.querySelector("#leg"), att=root.querySelector("#att"), scrub=root.querySelector("#scrub"), scrubT=root.querySelector("#scrubT");
+  const capEl=root.querySelector("#loadcap");
+  function update(){
+    root.querySelector("#lL").textContent=leg.value; root.querySelector("#aL").textContent=att.value;
+    scrubT.classList.toggle("on", scrub.checked);
+    const L=+leg.value, A=scrub.checked?0:+att.value, incoming=L+A;
+    const pct=Math.min(100, incoming/CAP*100);
+    root.querySelector("#load").style.width=pct+"%";
+    root.querySelector("#load").style.background = incoming>CAP? "var(--attack)" : "var(--primary)";
+    root.querySelector("#loadv").textContent=incoming+" / "+CAP+" req/s";
+    capEl.hidden=false; capEl.style.left="100%";
+    // real users served: if overwhelmed, capacity is shared by proportion
+    let servedPct=100, dropped=0;
+    if(incoming>CAP){ const ratio=CAP/incoming; servedPct=Math.round(L*ratio/ (L||1) *100); dropped=incoming-CAP; }
+    root.querySelector("#served").textContent=servedPct+"%";
+    root.querySelector("#drop").textContent=dropped+"/s";
+    const st=root.querySelector("#status");
+    if(incoming<=CAP){ st.className="statusline up"; st.innerHTML="✅ Service healthy — everyone gets through"; }
+    else if(servedPct>=50){ st.className="statusline warn"; st.innerHTML="⚠️ Overloaded — the server is dropping requests"; }
+    else { st.className="statusline down"; st.innerHTML="⛔ Denial of service — most real users are shut out"; }
+    if(!scrub.checked && incoming>CAP && servedPct<50 && !m1){ m1=true; root.querySelector("#t1").classList.add("ok"); }
+    if(scrub.checked && +att.value>=120 && servedPct>=100 && !m2){ m2=true; root.querySelector("#t2").classList.add("ok"); }
+    if(m1&&m2) api.complete();
+  }
+  [leg,att].forEach(x=>x.addEventListener("input",update)); scrub.addEventListener("change",update);
+  update();
+}
+
+/* 1.1 — attack-surface diagram (click the resource exhausted) */
+function a_surface(root, api){
+  const items=[
+    {q:"A <b>UDP / ICMP flood</b> sends so much junk traffic it clogs the link to the server.", a:"pipe", why:"Volumetric floods saturate the <b>network bandwidth</b> — the pipe fills before traffic even reaches the server."},
+    {q:"A <b>SYN flood</b> leaves thousands of half-open connections waiting.", a:"table", why:"It exhausts the <b>connection state table</b> at the firewall/OS, so no new connection can be accepted."},
+    {q:"An <b>HTTP flood</b> asks the app to run expensive searches over and over.", a:"cpu", why:"It burns the <b>server’s CPU and memory</b> doing real work — an application-layer attack."}
+  ];
+  let i=0;
+  root.innerHTML=`<p class="small muted">Different floods exhaust different resources. For each attack, click the part of the system it targets.</p>
+    <div class="diagram"><svg viewBox="0 0 520 150" role="img" aria-label="Network path: internet pipe, connection table, server CPU">
+      <g class="zone" data-z="pipe"><rect class="hit" x="8" y="45" width="150" height="60" rx="12" fill="var(--surface-2)" stroke="var(--border-2)" stroke-width="2"/><text class="zlabel" x="83" y="72" text-anchor="middle">🌐 Network pipe</text><text class="zsub" x="83" y="90" text-anchor="middle">bandwidth</text></g>
+      <text x="170" y="80" text-anchor="middle" fill="var(--muted)">→</text>
+      <g class="zone" data-z="table"><rect class="hit" x="185" y="45" width="150" height="60" rx="12" fill="var(--surface-2)" stroke="var(--border-2)" stroke-width="2"/><text class="zlabel" x="260" y="72" text-anchor="middle">🧱 Connection table</text><text class="zsub" x="260" y="90" text-anchor="middle">firewall / OS state</text></g>
+      <text x="347" y="80" text-anchor="middle" fill="var(--muted)">→</text>
+      <g class="zone" data-z="cpu"><rect class="hit" x="362" y="45" width="150" height="60" rx="12" fill="var(--surface-2)" stroke="var(--border-2)" stroke-width="2"/><text class="zlabel" x="437" y="72" text-anchor="middle">🖥️ Server CPU</text><text class="zsub" x="437" y="90" text-anchor="middle">app processing</text></g>
+    </svg></div>
+    <div class="cq-q" id="prompt"></div><div id="dfb" aria-live="polite"></div>`;
+  const prompt=root.querySelector("#prompt"), fb=root.querySelector("#dfb");
+  function show(){ if(i>=items.length){ fb.innerHTML=`<div class="fb good">🎯 All three mapped. Volumetric → pipe, protocol → connection table, application-layer → CPU.</div>`; api.complete(); prompt.textContent=""; return; }
+    root.querySelectorAll(".zone").forEach(z=>z.classList.remove("pick"));
+    prompt.innerHTML=`<span class="pill">${i+1}/${items.length}</span> ${items[i].q}`; fb.innerHTML=""; }
+  root.querySelectorAll(".zone").forEach(z=>z.addEventListener("click",()=>{
+    if(i>=items.length) return;
+    if(z.dataset.z===items[i].a){ z.classList.add("pick"); fb.innerHTML=`<div class="fb good">${items[i].why}<div class="act-next"><button class="btn btn-sm">${i+1<items.length?"Next":"Finish"}</button></div></div>`;
+      fb.querySelector("button").addEventListener("click",()=>{ i++; show(); });
+    } else { shake(z.querySelector(".hit")); fb.innerHTML=`<div class="fb bad">Not that one. Think about what runs out first.</div>`; }
+  }));
+  show();
+}
+
+/* 1.2 — SYN flood connection table */
+function a_syn(root, api){
+  const N=8; let slots=new Array(N).fill(null); let hs=0, refused=false, cookies=false, recovered=false;
+  root.innerHTML=`<div class="warnline">The server keeps a small table of connections. A normal connection needs a 3-step handshake; a SYN flood sends step 1 only and never finishes.</div>
+    <div class="part">Part A — one normal handshake</div>
+    <div class="row wrap"><button class="btn btn-sm" id="h1">1 · Client → SYN</button><button class="btn btn-sm" id="h2" disabled>2 · Server → SYN-ACK</button><button class="btn btn-sm" id="h3" disabled>3 · Client → ACK</button></div>
+    <div class="part">Server connection table (${N} slots)</div>
+    <div class="slots" id="grid"></div>
+    <div class="row wrap">
+      <button class="btn btn-sm btn-attack" id="flood">😈 Attacker SYN (spoofed, never finishes)</button>
+      <button class="btn btn-sm btn-ghost" id="legit">🙋 Real user tries to connect</button>
+      <label class="toggle" id="ckT"><input type="checkbox" id="ck"><span class="sw"></span>🍪 Enable SYN cookies</label>
+    </div>
+    <div id="sfb" aria-live="polite"></div>
+    <div class="tasks">
+      <div class="tk" id="t1"><span class="tick">✓</span>Complete one normal handshake</div>
+      <div class="tk" id="t2"><span class="tick">✓</span>Flood the table until a real user is refused</div>
+      <div class="tk" id="t3"><span class="tick">✓</span>Enable SYN cookies and let the real user back in</div>
+    </div>`;
+  const grid=root.querySelector("#grid"), fb=root.querySelector("#sfb"), ckT=root.querySelector("#ckT");
+  function draw(){ grid.innerHTML=slots.map(s=>`<div class="slot ${s||""}">${s==="half"?"½":s==="est"?"✓":s==="legit"?"🙋":""}</div>`).join(""); }
+  function free(){ return slots.indexOf(null); }
+  draw();
+  root.querySelector("#h1").addEventListener("click",function(){ this.disabled=true; root.querySelector("#h2").disabled=false; fb.innerHTML=`<div class="fb">Client asked to connect (SYN). Server reserves a slot…</div>`; const f=free(); if(f>=0){ slots[f]="half"; draw(); } });
+  root.querySelector("#h2").addEventListener("click",function(){ this.disabled=true; root.querySelector("#h3").disabled=false; fb.innerHTML=`<div class="fb">Server replied (SYN-ACK) and is waiting for the final step…</div>`; });
+  root.querySelector("#h3").addEventListener("click",function(){ this.disabled=true; const idx=slots.indexOf("half"); if(idx>=0) slots[idx]="est"; draw(); root.querySelector("#t1").classList.add("ok"); fb.innerHTML=`<div class="fb good">✅ Handshake complete — a real, established connection. Now see what the attacker does.</div>`; chk(); });
+  root.querySelector("#flood").addEventListener("click",()=>{ if(cookies){ fb.innerHTML=`<div class="fb good">With SYN cookies on, the server doesn’t reserve a slot for an unfinished handshake, so the flood fills nothing.</div>`; return; }
+    const f=free(); if(f>=0){ slots[f]="half"; draw(); fb.innerHTML=`<div class="fb bad">Attacker sent a SYN and vanished — that slot is stuck half-open.</div>`; }
+    else fb.innerHTML=`<div class="fb bad">⛔ Table full of half-open connections! No room for anyone else.</div>`; });
+  root.querySelector("#legit").addEventListener("click",()=>{
+    if(cookies){ const f=free()>=0?free():0; slots[f==null?0:f]="legit"; draw(); recovered=true; root.querySelector("#t3").classList.add("ok"); fb.innerHTML=`<div class="fb good">🙋 Real user connected! SYN cookies defeated the flood.</div>`; chk(); return; }
+    if(free()<0){ refused=true; root.querySelector("#t2").classList.add("ok"); fb.innerHTML=`<div class="fb bad">⛔ Real user REFUSED — the table is full of the attacker’s half-open connections. That is the denial of service. Try enabling SYN cookies.</div>`; chk(); }
+    else { const f=free(); slots[f]="legit"; draw(); fb.innerHTML=`<div class="fb">A real user slipped into a free slot. Keep flooding until the table is full, then try again.</div>`; }
+  });
+  root.querySelector("#ck").addEventListener("change",function(){ cookies=this.checked; ckT.classList.toggle("on",cookies); if(cookies){ slots=slots.map(s=>s==="half"?null:s); draw(); fb.innerHTML=`<div class="fb good">🍪 SYN cookies on: half-open slots cleared. Now let the real user try again.</div>`; } });
+  function chk(){ if(root.querySelector("#t1").classList.contains("ok") && refused && recovered) api.complete(); }
+}
+
+/* 1.3 — spoofing packet triage */
+function a_spoof(root, api){
+  const YOURNET="203.0.113.", SERVER="203.0.113.10";
+  const pkts=[
+    {src:"198.51.100.7", dst:SERVER, note:"from a normal client", spoof:false, why:"A plausible external client address — nothing wrong here."},
+    {src:SERVER, dst:SERVER, note:"source = destination", spoof:true, why:"Source equals the target itself — a classic <b>LAND</b> spoof. No real packet does this."},
+    {src:"10.0.0.5", dst:SERVER, note:"arriving from the internet", spoof:true, why:"<code>10.x.x.x</code> is a <b>private</b> address that can’t legitimately arrive from the internet — spoofed."},
+    {src:"203.0.113.10", dst:"198.51.100.7", note:"reply heading to a stranger", spoof:true, why:"This reply claims to come from your server but you never sent it — the attacker spoofed <b>your</b> address to bounce traffic at a victim."},
+    {src:"198.51.100.42", dst:SERVER, note:"from another normal client", spoof:false, why:"A valid public address — legitimate."}
+  ];
+  let i=0, correct=0;
+  root.innerHTML=`<p class="small muted">You’re inspecting incoming packet headers. Flag each as <b>legitimate</b> or <b>spoofed</b> (a forged source address).</p><div id="feed"></div><div id="pfb" aria-live="polite"></div>`;
+  const feed=root.querySelector("#feed"), fb=root.querySelector("#pfb");
+  function show(){ if(i>=pkts.length){ fb.innerHTML=`<div class="fb good">🛡️ Triage complete — ${correct}/${pkts.length} judged correctly. Spoofing forges the source so replies and blame go elsewhere.</div>`; api.complete(); return; }
+    const p=pkts[i]; feed.innerHTML=`<div class="pkt" id="pk"><div class="hd"><span>src <b>${p.src}</b></span><span>dst <b>${p.dst}</b></span><span class="muted">(${p.note})</span></div>
+      <div class="acts"><button class="pktbtn" data-v="legit">✔ Legitimate</button><button class="pktbtn" data-v="spoof">⚑ Spoofed</button></div><div class="verdict"></div></div>`;
+    const card=feed.querySelector("#pk"), v=card.querySelector(".verdict");
+    card.querySelectorAll(".pktbtn").forEach(b=>b.addEventListener("click",()=>{
+      const guess=b.dataset.v==="spoof"; const ok=guess===p.spoof; if(ok) correct++;
+      card.classList.add(ok?"ok":"no"); card.querySelectorAll(".pktbtn").forEach(x=>x.disabled=true);
+      v.innerHTML=`<b>${ok?"✔ Correct":"✘ Actually "+(p.spoof?"spoofed":"legitimate")}.</b> ${p.why}<div class="act-next"><button class="btn btn-sm">${i+1<pkts.length?"Next packet":"Finish"}</button></div>`;
+      v.querySelector("button").addEventListener("click",()=>{ i++; show(); });
+    }));
+  }
+  show();
+}
+
+/* 1.4 — read the traffic graph: click where the attack starts */
+function a_graph(root, api){
+  const W=520,H=160, n=20, start=12, base=25, pad=34;
+  const vals=[]; for(let k=0;k<n;k++){ vals.push(k<start? base+Math.round(Math.sin(k)*4) : base + (k-start+1)*20); }
+  const max=Math.max(...vals), X=k=>pad+k/(n-1)*(W-pad-10), Y=v=>H-24-v/max*(H-44);
+  let d=""; vals.forEach((v,k)=>d+=(k?"L":"M")+X(k).toFixed(1)+" "+Y(v).toFixed(1));
+  const bands=vals.map((v,k)=>`<rect class="band" data-k="${k}" x="${(X(k)-(W-pad)/n/2).toFixed(1)}" y="20" width="${((W-pad)/n).toFixed(1)}" height="${H-44}"/>`).join("");
+  root.innerHTML=`<p class="small muted">This is live request traffic over time. <b>Click the point on the graph where the flood begins.</b></p>
+    <div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Traffic over time with a spike">
+      <line x1="${pad}" y1="${H-24}" x2="${W-6}" y2="${H-24}" stroke="var(--border-2)"/><line x1="${pad}" y1="20" x2="${pad}" y2="${H-24}" stroke="var(--border-2)"/>
+      <text x="${pad}" y="${H-8}" font-size="11" fill="var(--muted)">time →</text>
+      <path class="cl" d="${d}"/>${bands}</svg></div>
+    <div id="gfb" aria-live="polite"></div>`;
+  const fb=root.querySelector("#gfb");
+  root.querySelectorAll(".band").forEach(b=>b.addEventListener("click",()=>{
+    const k=+b.dataset.k; root.querySelectorAll(".band").forEach(x=>x.classList.remove("pick"));
+    if(Math.abs(k-start)<=1){ b.classList.add("pick"); fb.innerHTML=`<div class="fb good">🎯 Right there — traffic jumps from a steady baseline into a sharp, sustained climb. A sudden spike with no normal cause is the signature of a flood starting.</div>`; api.complete(); }
+    else if(k<start){ b.classList.add("pick"); fb.innerHTML=`<div class="fb bad">Too early — the line is still flat and normal here. Look for where it suddenly shoots up.</div>`; }
+    else { b.classList.add("pick"); fb.innerHTML=`<div class="fb bad">The attack is already in full swing by here. Look back to where the climb <i>begins</i>.</div>`; }
+  }));
+}
+
+/* ============ LESSON 2 ============ */
+
+/* 2.0 — botnet scaler */
+function a_botnet(root, api){
+  const CAP=10000, perBot=5; // Mbps capacity, Mbps per bot
+  let m1=false;
+  root.innerHTML=`<p class="small muted">In a DDoS, each bot sends only a trickle — but thousands together overwhelm a big server. The server can absorb <b>${CAP.toLocaleString()} Mbps</b>.</p>
+    <div class="ctl"><label>Bots in the botnet <b id="bL">1</b></label><input type="range" id="bots" min="0" max="4000" value="1" step="1"></div>
+    ${meter("tot","Combined attack traffic vs server capacity","var(--attack)")}
+    <div class="stat-row">
+      <div class="stat att"><div class="k">Total attack</div><div class="v" id="total">5 Mbps</div></div>
+      <div class="stat"><div class="k">Per bot</div><div class="v" id="pb">5 Mbps</div></div>
+    </div>
+    <div class="statusline up" id="status">✅ Server absorbing the traffic</div>
+    <div class="tasks">
+      <div class="tk" id="t1"><span class="tick">✓</span>Find how many bots it takes to overwhelm the server</div>
+    </div>
+    <p class="small muted" id="note" style="margin-top:8px"></p>`;
+  const bots=root.querySelector("#bots");
+  function update(){
+    const b=+bots.value, total=b*perBot, pct=Math.min(100,total/CAP*100);
+    root.querySelector("#bL").textContent=b.toLocaleString();
+    root.querySelector("#tot").style.width=pct+"%"; root.querySelector("#tot").style.background= total>CAP?"var(--attack)":"var(--accent)";
+    root.querySelector("#totv").textContent=total.toLocaleString()+" / "+CAP.toLocaleString()+" Mbps";
+    root.querySelector("#totcap").hidden=false; root.querySelector("#totcap").style.left="100%";
+    root.querySelector("#total").textContent=total.toLocaleString()+" Mbps";
+    const st=root.querySelector("#status");
+    if(total>CAP){ st.className="statusline down"; st.innerHTML="⛔ Overwhelmed — the server is down"; if(!m1){ m1=true; root.querySelector("#t1").classList.add("ok"); api.complete(); } }
+    else { st.className="statusline up"; st.innerHTML="✅ Server absorbing the traffic"; }
+    root.querySelector("#note").innerHTML = b>0? `Notice: each bot sends just <b>${perBot} Mbps</b> — harmless alone and hard to spot. The <b>${b.toLocaleString()}</b> of them together are the weapon.` : "";
+  }
+  bots.addEventListener("input",update); update();
+}
+
+/* 2.1 — block the IP: DoS vs DDoS whack-a-mole */
+function a_block(root, api){
+  let scenario="dos"; let dosDone=false, ddosSeen=false;
+  root.innerHTML=`<div class="seg" role="group" aria-label="Scenario"><button data-s="dos" class="on">Single-source DoS</button><button data-s="ddos">Distributed DDoS</button></div>
+    <p class="small muted" style="margin-top:10px" id="intro"></p>
+    <div class="iplist" id="ips"></div>
+    <div class="statusline down" id="st"></div>
+    <div id="bq" style="margin-top:14px"></div>`;
+  const ips=root.querySelector("#ips"), st=root.querySelector("#st"), intro=root.querySelector("#intro");
+  let list=[];
+  function render(){
+    intro.innerHTML = scenario==="dos" ? "All the attack traffic comes from <b>one</b> machine. Block it." : "The flood comes from a whole <b>botnet</b>. Try blocking the attackers one by one.";
+    ips.innerHTML=list.map((ip,i)=>`<div class="iprow ${ip.blocked?"blocked":""}" ><span>${ip.addr}</span><span class="ipstate">${ip.blocked?"✓ blocked":"⚠ attacking"}</span>${ip.blocked?"":`<button class="pktbtn" data-i="${i}">Block</button>`}</div>`).join("");
+    ips.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.i; list[i].blocked=true;
+      if(scenario==="ddos"){ // a new bot appears
+        if(list.filter(x=>!x.blocked).length<=2) list.push({addr:"185.22."+ (Math.floor(Math.random()*200)+1) +"."+(Math.floor(Math.random()*254)+1), blocked:false});
+      }
+      render(); status();
+    }));
+    status();
+  }
+  function status(){
+    const active=list.filter(x=>!x.blocked).length;
+    if(scenario==="dos"){ if(active===0){ st.className="statusline up"; st.innerHTML="✅ Attack stopped — one block was enough. Blocking works when there’s a single source."; if(!dosDone){ dosDone=true; chk(); } }
+      else { st.className="statusline down"; st.innerHTML="⛔ Under attack from 1 source"; } }
+    else { ddosSeen=true; if(active===0){ st.className="statusline up"; st.innerHTML="…for a moment. But bots keep appearing."; }
+      else { st.className="statusline down"; st.innerHTML=`⛔ Still under attack from ${active} different IPs — and more keep coming. You can’t block your way out of a DDoS.`; }
+      chk(); }
+  }
+  function setScenario(s){ scenario=s; root.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x.dataset.s===s));
+    list = s==="dos" ? [{addr:"198.51.100.66",blocked:false}] : [1,2,3,4,5,6].map(i=>({addr:"185.22."+(i*17)+"."+(i*9),blocked:false})); render(); }
+  root.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>setScenario(b.dataset.s)));
+  setScenario("dos");
+  let quizBuilt=false;
+  function chk(){ if(dosDone && ddosSeen && !quizBuilt){ quizBuilt=true;
+    choiceQuiz(root.querySelector("#bq"),{ items:[{ q:"Why can’t you simply block the attacker in a DDoS the way you can in a single-source DoS?", opts:["The traffic comes from thousands of different IPs, and more keep appearing","DDoS traffic is encrypted","Blocking is illegal"], a:"The traffic comes from thousands of different IPs, and more keep appearing", why:"Distribution is the whole point: no single address to block, so defence must handle scale (upstream scrubbing, rate limits, more capacity)." }], onDone:api.complete });
+  } }
+}
+
+/* 2.2 — application-layer cost asymmetry */
+function a_appcost(root, api){
+  let aEffort=0, sLoad=0, done=false;
+  root.innerHTML=`<p class="small muted">Application-layer attacks are dangerous because a <b>tiny request</b> can trigger <b>huge server work</b> (a complex search, a report, a database join). Send some requests and watch the imbalance.</p>
+    <div class="row wrap"><button class="btn btn-attack btn-sm" id="send">Send 1 “search everything” request</button><button class="btn btn-quiet btn-sm" id="reset">Reset</button></div>
+    ${meter("ae","Attacker effort","var(--muted)")}
+    ${meter("sl","Server load","var(--attack)")}
+    <div class="statusline up" id="st">Server idle</div>
+    <div class="tasks"><div class="tk" id="t1"><span class="tick">✓</span>Max out the server’s load with very little attacker effort</div></div>
+    <div id="aq" style="margin-top:14px"></div>`;
+  const st=root.querySelector("#st");
+  function draw(){ root.querySelector("#ae").style.width=Math.min(100,aEffort)+"%"; root.querySelector("#aev").textContent=aEffort+" units";
+    root.querySelector("#sl").style.width=Math.min(100,sLoad)+"%"; root.querySelector("#slv").textContent=Math.min(100,sLoad)+"%";
+    if(sLoad>=100){ st.className="statusline down"; st.innerHTML=`⛔ Server overwhelmed — and the attacker only spent <b>${aEffort} units</b> of effort.`; }
+    else if(sLoad>0){ st.className="statusline warn"; st.innerHTML="⚠️ Server working hard"; } else { st.className="statusline up"; st.innerHTML="Server idle"; }
+  }
+  let built=false;
+  root.querySelector("#send").addEventListener("click",()=>{ aEffort+=2; sLoad+=25; draw();
+    if(sLoad>=100 && !done){ done=true; root.querySelector("#t1").classList.add("ok");
+      if(!built){ built=true; choiceQuiz(root.querySelector("#aq"),{ items:[{ q:"Why are application-layer (HTTP) floods hard to stop with simple traffic filters?", opts:["Each request looks like a normal visitor, but makes the server do expensive work","They use more bandwidth than any other attack","They never reach the server"], a:"Each request looks like a normal visitor, but makes the server do expensive work", why:"Low volume + legitimate-looking requests slip past volume-based defences; mitigation needs app-aware rate limiting and caching." }], onDone:api.complete }); }
+    } });
+  root.querySelector("#reset").addEventListener("click",()=>{ aEffort=0; sLoad=0; draw(); });
+  draw();
+}
+
+/* 2.3 — Slowloris connection pool */
+function a_slow(root, api){
+  const N=8; let slots=new Array(N).fill(null); let timeout=false, blocked=false, recovered=false;
+  root.innerHTML=`<div class="warnline">Slowloris opens many connections and keeps each one barely alive — sending a tiny bit of a request very slowly — so the server’s connection pool stays full of “almost finished” requests.</div>
+    <div class="part">Server connection pool (${N} slots)</div><div class="slots" id="grid"></div>
+    <div class="row wrap">
+      <button class="btn btn-sm btn-attack" id="slow">🐌 Open a slow connection (hold it open)</button>
+      <button class="btn btn-sm btn-ghost" id="legit">🙋 Real user connects</button>
+      <label class="toggle" id="toT"><input type="checkbox" id="to"><span class="sw"></span>⏱️ Time out idle connections</label>
+    </div>
+    <div id="slfb" aria-live="polite"></div>
+    <div class="tasks">
+      <div class="tk" id="t1"><span class="tick">✓</span>Fill the pool with slow connections until a real user is blocked</div>
+      <div class="tk" id="t2"><span class="tick">✓</span>Enable idle time-outs and let the real user in</div>
+    </div>`;
+  const grid=root.querySelector("#grid"), fb=root.querySelector("#slfb"), toT=root.querySelector("#toT");
+  function draw(){ grid.innerHTML=slots.map(s=>`<div class="slot ${s==="slow"?"half":s==="legit"?"legit":""}">${s==="slow"?"🐌":s==="legit"?"🙋":""}</div>`).join(""); }
+  function free(){ return slots.indexOf(null); }
+  draw();
+  root.querySelector("#slow").addEventListener("click",()=>{ if(timeout){ fb.innerHTML=`<div class="fb good">With time-outs on, the server drops connections that stall, so slow connections can’t pile up.</div>`; return; }
+    const f=free(); if(f>=0){ slots[f]="slow"; draw(); fb.innerHTML=`<div class="fb bad">A slow connection is holding a slot open, doing almost nothing.</div>`; } else fb.innerHTML=`<div class="fb bad">⛔ Pool full of slow connections!</div>`; });
+  root.querySelector("#legit").addEventListener("click",()=>{
+    if(timeout){ const f=free(); slots[f<0?0:f]="legit"; draw(); recovered=true; root.querySelector("#t2").classList.add("ok"); fb.innerHTML=`<div class="fb good">🙋 Real user got a slot — time-outs cleared the stalled connections.</div>`; chk(); return; }
+    if(free()<0){ blocked=true; root.querySelector("#t1").classList.add("ok"); fb.innerHTML=`<div class="fb bad">⛔ Real user blocked — every slot is held by a slow connection. Barely any bandwidth was used; that’s what makes Slowloris sneaky. Try the time-out defence.</div>`; chk(); }
+    else { const f=free(); slots[f]="legit"; draw(); fb.innerHTML=`<div class="fb">A real user took a free slot. Keep opening slow connections until the pool is full.</div>`; }
+  });
+  root.querySelector("#to").addEventListener("change",function(){ timeout=this.checked; toT.classList.toggle("on",timeout); if(timeout){ slots=slots.map(s=>s==="slow"?null:s); draw(); fb.innerHTML=`<div class="fb good">⏱️ Idle time-outs on: stalled connections dropped. Now let the real user try.</div>`; } });
+  function chk(){ if(blocked && recovered) api.complete(); }
+}
+
+/* 2.4 — match defence to attack */
+function a_ddosDef(root, api){
+  choiceQuiz(root,{ shuffle:true,
+    hint:"Match the defence to what the attack exhausts: bandwidth, connection state, or the application.",
+    items:[
+      {q:"A volumetric UDP flood is saturating your internet link.", a:"Upstream scrubbing / more bandwidth (a CDN or scrubbing centre)", opts:["Upstream scrubbing / more bandwidth (a CDN or scrubbing centre)","A longer password","Turning off logging"], why:"Volumetric floods must be absorbed or filtered <b>before</b> your link — only big upstream capacity helps."},
+      {q:"A SYN flood is filling your connection table.", a:"SYN cookies and connection rate limits", opts:["SYN cookies and connection rate limits","Buying a bigger monitor","Disabling the firewall"], why:"SYN cookies avoid reserving state for unfinished handshakes."},
+      {q:"An HTTP flood of realistic-looking requests is exhausting your app servers.", a:"Application-aware rate limiting, CAPTCHAs and caching", opts:["Application-aware rate limiting, CAPTCHAs and caching","Blocking all UDP","Unplugging the keyboard"], why:"App-layer attacks need app-layer defences that tell humans from bots and cache expensive work."},
+      {q:"A single machine is sending all the attack traffic.", a:"Block that source IP", opts:["Block that source IP","Rebuild every server","Pay a ransom"], why:"A single-source DoS is the one case where simply blocking the source works."}
+    ], onDone:api.complete });
+}
+
+/* ============ LESSON 3 ============ */
+
+/* 3.0 — reflection router */
+function a_reflect(root, api){
+  let spoof="self"; let sawAttack=false;
+  root.innerHTML=`<p class="small muted">In a <b>reflection</b> attack the attacker sends a request to an innocent server (a “reflector”) but forges the <b>source</b> address. The reflector’s reply goes to whoever is named as the source. Choose the source, then send.</p>
+    <div class="seg" role="group" aria-label="Spoofed source"><button data-s="self" class="on">Source = attacker’s own IP</button><button data-s="victim">Source = victim’s IP (spoofed)</button></div>
+    <div class="netrow">
+      <div class="node" id="nA"><span class="ic">😈</span>Attacker<div class="ip">198.51.100.9</div></div>
+      <div class="arrow att">—req→</div>
+      <div class="node" id="nR"><span class="ic">📡</span>Reflector<div class="ip">DNS 8.8.8.8</div></div>
+      <div class="arrow" id="arr2">←reply—</div>
+      <div class="node" id="nV"><span class="ic">🎯</span>Victim<div class="ip">203.0.113.5</div></div>
+    </div>
+    <div class="row wrap"><button class="btn btn-sm btn-attack" id="send">Send request to reflector</button></div>
+    <div id="rfb" aria-live="polite"></div>
+    <div class="tasks"><div class="tk" id="t1"><span class="tick">✓</span>Spoof the victim’s IP and watch the reflected reply land on the victim</div></div>
+    <div id="rq" style="margin-top:14px"></div>`;
+  const fb=root.querySelector("#rfb"), arr2=root.querySelector("#arr2");
+  root.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{ spoof=b.dataset.s; root.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));
+    root.querySelectorAll(".node").forEach(n=>n.classList.remove("hit","safe")); fb.innerHTML=""; }));
+  let built=false;
+  root.querySelector("#send").addEventListener("click",()=>{
+    root.querySelectorAll(".node").forEach(n=>n.classList.remove("hit","safe"));
+    if(spoof==="self"){ root.querySelector("#nA").classList.add("safe"); arr2.className="arrow"; fb.innerHTML=`<div class="fb">The reply came straight back to the attacker. Harmless — and pointless for an attack.</div>`; }
+    else { root.querySelector("#nV").classList.add("hit"); arr2.className="arrow att"; sawAttack=true; root.querySelector("#t1").classList.add("ok");
+      fb.innerHTML=`<div class="fb bad">💥 The reflector sent its reply to the <b>victim</b>, who never asked for it. The attacker’s address is hidden, and the victim is flooded by innocent servers. Now scale this up with thousands of reflectors.</div>`;
+      if(!built){ built=true; choiceQuiz(root.querySelector("#rq"),{ items:[{ q:"What makes reflection possible in the first place?", opts:["The attacker can forge (spoof) the source IP address","The reflector is already infected","The victim clicks a link"], a:"The attacker can forge (spoof) the source IP address", why:"Reflection depends on source-address spoofing. Block spoofing at the network edge and reflection collapses." }], onDone:api.complete }); }
+    }
+  });
+}
+
+/* 3.1 — amplification calculator */
+function a_ampcalc(root, api){
+  const protos={ dns:{n:"DNS",f:54}, ntp:{n:"NTP",f:556}, ssdp:{n:"SSDP",f:30}, memcached:{n:"memcached",f:51000} };
+  let proto="dns", m1=false, memTried=false;
+  root.innerHTML=`<p class="small muted">In <b>amplification</b> the reply is far larger than the request. A small upload from the attacker becomes a massive flood at the victim. Pick a protocol and dial up the attacker’s bandwidth.</p>
+    <div class="seg" role="group" aria-label="Protocol" id="protos">${Object.keys(protos).map((k,i)=>`<button data-p="${k}" class="${i?"":"on"}">${protos[k].n} ×${protos[k].f}</button>`).join("")}</div>
+    <div class="ctl" style="margin-top:12px"><label>Attacker upload bandwidth <b id="upL">10</b> Mbps</label><input type="range" id="up" min="1" max="100" value="10"></div>
+    <div class="ampout">
+      <div class="small muted">Attacker sends</div><div class="ampbar"><i id="inbar" style="background:var(--muted)"></i></div>
+      <div class="small muted">Victim receives (amplified)</div><div class="ampbar"><i id="outbar" style="background:var(--attack)"></i></div>
+      <div class="ampbig" id="result"></div>
+    </div>
+    <div class="statusline up" id="st"></div>
+    <div class="tasks">
+      <div class="tk" id="t1"><span class="tick">✓</span>Produce an attack bigger than 10 Gbps using amplification</div>
+      <div class="tk" id="t2"><span class="tick">✓</span>Try the memcached protocol to see an extreme amplification factor</div>
+    </div>`;
+  const up=root.querySelector("#up");
+  function fmt(mbps){ return mbps>=1000? (mbps/1000).toFixed(1)+" Gbps" : Math.round(mbps)+" Mbps"; }
+  function update(){
+    const f=protos[proto].f, inMbps=+up.value, outMbps=inMbps*f;
+    root.querySelector("#upL").textContent=inMbps;
+    root.querySelector("#inbar").style.width=Math.min(100,inMbps)+"%";
+    root.querySelector("#outbar").style.width=Math.min(100, outMbps/ (100*51000) *100 + (outMbps>0?4:0))+"%";
+    root.querySelector("#result").innerHTML=`${fmt(inMbps)} × ${f} = <span style="color:var(--attack)">${fmt(outMbps)}</span>`;
+    const st=root.querySelector("#st");
+    if(outMbps>=10000){ st.className="statusline down"; st.innerHTML=`⛔ ${fmt(outMbps)} of traffic from just ${fmt(inMbps)} of effort — the victim is crushed.`; if(!m1){ m1=true; root.querySelector("#t1").classList.add("ok"); } }
+    else { st.className="statusline warn"; st.innerHTML=`Reflected flood: ${fmt(outMbps)}. Raise the bandwidth or pick a stronger protocol.`; }
+    if(proto==="memcached" && !memTried){ memTried=true; root.querySelector("#t2").classList.add("ok"); }
+    if(m1&&memTried) api.complete();
+  }
+  root.querySelectorAll("#protos button").forEach(b=>b.addEventListener("click",()=>{ proto=b.dataset.p; root.querySelectorAll("#protos button").forEach(x=>x.classList.toggle("on",x===b)); update(); }));
+  up.addEventListener("input",update); update();
+}
+
+/* 3.2 — compute the amplification factor */
+function a_ampfactor(root, api){
+  choiceQuiz(root,{ shuffle:true,
+    hint:"Amplification factor = response size ÷ request size. Bigger ratio = more dangerous.",
+    items:[
+      {q:"A request is <b>60 bytes</b>; the reply is <b>3,000 bytes</b>. The amplification factor is about…", a:"50×", opts:["50×","0.02×","3,060×"], why:"3000 ÷ 60 = 50. The victim gets 50 bytes for every byte the attacker sends."},
+      {q:"A <b>64-byte</b> query returns a <b>3,456-byte</b> response. The factor is roughly…", a:"54×", opts:["54×","6×","0.5×"], why:"3456 ÷ 64 ≈ 54 — a typical DNS amplification factor."},
+      {q:"Two protocols: A gives ×30, B gives ×500. Which is the bigger threat for the same attacker bandwidth?", a:"Protocol B (×500)", opts:["Protocol B (×500)","Protocol A (×30)","They’re equal"], why:"A higher factor turns the same effort into far more attack traffic."},
+      {q:"Why does a high amplification factor help the attacker so much?", a:"A small amount of their bandwidth becomes a huge flood at the victim", opts:["A small amount of their bandwidth becomes a huge flood at the victim","It encrypts the attack","It hides the victim’s identity"], why:"Amplification multiplies effort; combined with spoofing it also hides the attacker."}
+    ], onDone:api.complete });
+}
+
+/* 3.3 — ingress filtering toggle */
+function a_ingress(root, api){
+  let filter=false, demo=false;
+  root.innerHTML=`<p class="small muted">Reflection and amplification both depend on <b>spoofed source addresses</b>. <b>Ingress filtering (BCP 38)</b> makes a network drop outgoing packets whose source IP isn’t really one of its own. Toggle it, then send the spoofed packet.</p>
+    <label class="toggle" id="ingT"><input type="checkbox" id="ing"><span class="sw"></span>🛡️ Source-address validation (BCP 38) at the attacker’s ISP</label>
+    <div class="netrow">
+      <div class="node" id="nA"><span class="ic">😈</span>Attacker<div class="ip">spoofs victim’s IP</div></div>
+      <div class="arrow att">—→</div>
+      <div class="node" id="nI"><span class="ic">🚧</span>ISP edge<div class="ip">BCP 38 check</div></div>
+      <div class="arrow" id="a2">—→</div>
+      <div class="node" id="nR"><span class="ic">📡</span>Reflector<div class="ip"></div></div>
+    </div>
+    <div class="row wrap" style="margin-top:4px"><button class="btn btn-sm btn-attack" id="send">Send spoofed request</button></div>
+    <div id="ifb" aria-live="polite"></div>
+    <div class="tasks"><div class="tk" id="t1"><span class="tick">✓</span>Enable ingress filtering and watch the spoofed packet get dropped</div></div>`;
+  const ingT=root.querySelector("#ingT"), fb=root.querySelector("#ifb"), a2=root.querySelector("#a2");
+  root.querySelector("#ing").addEventListener("change",function(){ filter=this.checked; ingT.classList.toggle("on",filter); root.querySelectorAll(".node").forEach(n=>n.classList.remove("hit","safe")); fb.innerHTML=""; });
+  root.querySelector("#send").addEventListener("click",()=>{
+    root.querySelectorAll(".node").forEach(n=>n.classList.remove("hit","safe"));
+    if(filter){ root.querySelector("#nI").classList.add("safe"); a2.textContent="✕"; a2.className="arrow"; demo=true; root.querySelector("#t1").classList.add("ok");
+      fb.innerHTML=`<div class="fb good">🛡️ Dropped at the edge — the packet’s source didn’t match the attacker’s real network, so the ISP refused to forward it. No spoof, no reflection, no amplification.</div>`; api.complete(); }
+    else { root.querySelector("#nR").classList.add("hit"); a2.textContent="→"; a2.className="arrow att";
+      fb.innerHTML=`<div class="fb bad">Without filtering, the spoofed packet sails through to the reflector, which will reply to the victim. This is why widespread BCP 38 adoption matters.</div>`; }
+  });
+}
+
+/* 3.4 — layered defence final */
+function a_layered(root, api){
+  choiceQuiz(root,{ shuffle:true,
+    items:[
+      {q:"Which single measure would do the most to end <b>reflection/amplification</b> attacks across the whole internet?", a:"Networks filtering spoofed source addresses (BCP 38)", opts:["Networks filtering spoofed source addresses (BCP 38)","Everyone using longer passwords","Turning off DNS"], why:"No spoofing means no reflection. It needs broad adoption, which is the hard part."},
+      {q:"To survive a large volumetric DDoS, an organisation most needs…", a:"Upstream scrubbing / a CDN with huge absorbing capacity", opts:["Upstream scrubbing / a CDN with huge absorbing capacity","A faster laptop","More staff passwords"], why:"The flood must be absorbed or cleaned before it reaches your limited link."},
+      {q:"Why is DDoS defence described as “defence in depth”?", a:"No single control is enough; you combine filtering, scrubbing, rate limits and capacity", opts:["No single control is enough; you combine filtering, scrubbing, rate limits and capacity","Because it only needs one firewall","Because attacks never change"], why:"Layered measures cover volumetric, protocol and application attacks together."},
+      {q:"An operator who runs a public DNS or NTP server should…", a:"Harden and rate-limit it so it can’t be abused as a reflector", opts:["Harden and rate-limit it so it can’t be abused as a reflector","Leave it fully open for convenience","Shut down the internet"], why:"Misconfigured open servers are the reflectors these attacks rely on."}
+    ], onDone:api.complete });
+}
+
+/* ============ modules ============ */
+const MODULES=[
+{ title:"Denial of Service, Spoofing and Flooding Attacks", short:"DoS & flooding",
+  blurb:"Exhausting a target instead of breaking in — floods, spoofing and the resources they drain.",
+  takeaways:[
+    "A DoS attack exhausts a resource (bandwidth, connection state or CPU) so real users can’t get service — it doesn’t breach the system.",
+    "Volumetric floods drain bandwidth; protocol floods (SYN) drain the connection table; application floods drain the server.",
+    "A SYN flood fills the connection table with half-open connections; SYN cookies defend against it.",
+    "Source-address spoofing forges the sender so replies and blame go elsewhere."
+  ],
+  steps:[
+    { title:"What denial of service really is",
+      concept:`<p>Most attacks try to <b>break in</b>. A <b>denial-of-service (DoS)</b> attack does the opposite: it leaves the data untouched and instead <b>exhausts a resource</b> so that legitimate users can’t get through. The system isn’t breached — it’s buried.</p>
+        <p>Every server has limits: bandwidth, memory, connection slots, CPU. Push any of them past the limit and service collapses.</p>`,
+      key:"DoS attacks <b>exhaust resources</b>, they don’t steal data. Availability is the target.",
+      task:"Drag the attack traffic up and watch real users get squeezed out. Then switch on scrubbing to recover.",
+      hints:["Push the attack flood slider far past the server’s 100 req/s capacity.","Once real users drop below 50%, turn on traffic scrubbing with the attack still running."],
+      activity:a_capacity },
+    { title:"Which resource gets exhausted?",
+      concept:`<p>Floods are grouped by <b>what they drain</b>:</p>
+        <div class="defn">
+          <div class="d"><b>Volumetric</b> — raw junk traffic that saturates your <b>bandwidth</b> (UDP/ICMP floods).</div>
+          <div class="d"><b>Protocol</b> — abuses how connections work to drain the <b>connection table</b> (SYN flood).</div>
+          <div class="d"><b>Application-layer</b> — realistic requests that exhaust the <b>server’s CPU</b> (HTTP flood).</div>
+        </div>`,
+      key:"Volumetric → pipe · protocol → connection table · application → CPU.",
+      task:"For each attack, click the part of the system it exhausts.",
+      hints:["Pure junk traffic hits the pipe first.","Half-open connections hit the table; expensive requests hit the CPU."],
+      activity:a_surface },
+    { title:"Inside a SYN flood",
+      concept:`<p>Opening a TCP connection takes a <b>three-way handshake</b>: SYN → SYN-ACK → ACK. The server reserves a slot the moment it sees a SYN, and waits for the ACK.</p>
+        <p>A <b>SYN flood</b> sends step 1 and never finishes. Each SYN ties up a slot. Enough of them and the <b>connection table</b> fills, so genuine users are refused. <b>SYN cookies</b> let the server avoid reserving state until the handshake completes.</p>`,
+      key:"A SYN flood fills the connection table with half-open connections. SYN cookies defeat it.",
+      task:"Complete one normal handshake, then flood the table until a real user is refused — and fix it with SYN cookies.",
+      hints:["Do the 1-2-3 handshake first.","Click the attacker SYN button until all 8 slots are half-open, try a real user, then enable SYN cookies and try again."],
+      activity:a_syn },
+    { title:"Spoofing: forging the sender",
+      concept:`<p>Attackers often forge the <b>source address</b> of their packets — <b>IP spoofing</b>. This hides who they are, lets them impersonate trusted hosts, and (as you’ll see in Lesson 3) lets them bounce traffic off others.</p>
+        <p>Some spoofs are easy to spot: a source equal to the destination (a <b>LAND</b> attack), a private address arriving from the internet, or a reply you never requested.</p>`,
+      key:"Spoofing forges the source so replies and blame go to someone else.",
+      task:"Inspect each packet’s headers and flag it as legitimate or spoofed.",
+      hints:["Source = destination is never legitimate.","Private ranges like 10.x can’t arrive from the public internet."],
+      activity:a_spoof },
+    { title:"Reading the traffic",
+      concept:`<p>Defenders watch traffic graphs for the tell-tale shape of an attack: a <b>sudden, sustained spike</b> with no business reason. Spotting the <b>moment it starts</b> helps you respond fast and find the cause.</p>`,
+      key:"A flood shows up as an abrupt jump from the normal baseline.",
+      task:"Click the point on the live traffic graph where the flood begins.",
+      hints:["Ignore the flat, wiggly baseline.","Find where the line suddenly starts climbing and stays high."],
+      activity:a_graph }
+  ]
+},
+{ title:"Distributed and Application-Layer Attacks", short:"DDoS & app-layer",
+  blurb:"Many machines at once, and clever low-volume attacks that still bring servers down.",
+  takeaways:[
+    "A DDoS uses many compromised machines (a botnet) at once, so there’s no single source to block.",
+    "Each bot sends little traffic, but the combined flood overwhelms even large servers.",
+    "Application-layer attacks use small, realistic requests that force expensive server work.",
+    "Slowloris holds many connections open slowly, exhausting the connection pool with almost no bandwidth.",
+    "Defences must match the attack: upstream scrubbing, SYN cookies, or app-aware rate limiting."
+  ],
+  steps:[
+    { title:"From DoS to DDoS",
+      concept:`<p>A single machine can only send so much. A <b>distributed denial of service (DDoS)</b> enlists thousands of compromised machines — a <b>botnet</b> — to attack at once. The combined traffic dwarfs any single source, and there’s no one address to block.</p>`,
+      key:"DDoS = many machines flooding one target together.",
+      task:"Scale the botnet up and find how many bots it takes to overwhelm the server.",
+      hints:["Drag the bot slider upward.","Watch the combined-traffic meter cross the capacity line."],
+      activity:a_botnet },
+    { title:"Why you can’t just block the attacker",
+      concept:`<p>Against a single source, one firewall rule ends the attack. Against a DDoS, blocking is <b>whack-a-mole</b>: thousands of addresses, with fresh bots appearing as you block old ones. Distribution is exactly what makes DDoS hard.</p>`,
+      key:"Blocking one IP works for DoS, not DDoS.",
+      task:"Block the single-source attacker, then switch to DDoS mode and try the same thing.",
+      hints:["In DoS mode, one block ends it.","In DDoS mode, keep blocking — notice new bots keep coming."],
+      activity:a_block },
+    { title:"Application-layer attacks",
+      concept:`<p>Not every attack is a flood of junk. <b>Application-layer</b> attacks send <b>small, legitimate-looking requests</b> that each make the server do a lot of work — a complex search, a report, a heavy database query. Low volume, big impact, and hard to tell from real users.</p>`,
+      key:"A cheap request can trigger expensive server work — cost asymmetry.",
+      task:"Send a few “search everything” requests and watch the server max out on tiny attacker effort.",
+      hints:["Click the send button a few times.","Watch how little attacker effort it takes to peg the server at 100%."],
+      activity:a_appcost },
+    { title:"Slowloris: the slow starvation",
+      concept:`<p><b>Slowloris</b> is the sneakiest kind: it opens many connections and keeps each one <b>barely alive</b>, sending a few bytes very slowly so the request never completes. The server’s <b>connection pool</b> fills with these stalled connections while almost no bandwidth is used.</p>`,
+      key:"Slowloris starves the connection pool with slow, incomplete requests. Idle time-outs stop it.",
+      task:"Fill the pool with slow connections until a real user is blocked, then defend with idle time-outs.",
+      hints:["Open slow connections until all slots are held.","Then enable idle time-outs and let the real user connect."],
+      activity:a_slow },
+    { title:"Matching defences to attacks",
+      concept:`<p>There’s no one cure. Each attack type has its own best defence:</p>
+        <div class="defn">
+          <div class="d"><b>Volumetric</b> → upstream scrubbing / CDN capacity.</div>
+          <div class="d"><b>Protocol (SYN)</b> → SYN cookies, connection rate limits.</div>
+          <div class="d"><b>Application</b> → app-aware rate limiting, CAPTCHAs, caching.</div>
+          <div class="d"><b>Single source</b> → just block the IP.</div>
+        </div>`,
+      key:"Fit the defence to the resource under attack.",
+      task:"Choose the right defence for each attack scenario.",
+      hints:["Ask what the attack exhausts.","Only a single-source DoS can be solved by blocking an IP."],
+      activity:a_ddosDef }
+  ]
+},
+{ title:"Reflection and Amplification Attacks", short:"Reflection & amplification",
+  blurb:"Bouncing traffic off innocent servers, and multiplying it on the way.",
+  takeaways:[
+    "Reflection bounces traffic off innocent servers by spoofing the victim’s source address.",
+    "Amplification uses protocols where the reply is far larger than the request.",
+    "Amplification factor = response size ÷ request size; some protocols exceed ×50,000.",
+    "Both depend on spoofing — ingress filtering (BCP 38) stops them at the source.",
+    "Full defence is layered: anti-spoofing, hardened reflectors, scrubbing and capacity."
+  ],
+  steps:[
+    { title:"Reflection: hiding behind others",
+      concept:`<p>In a <b>reflection attack</b> the attacker sends requests to innocent servers but <b>spoofs the victim’s address</b> as the source. Each server politely replies — to the <b>victim</b>. The attacker stays hidden, and the flood seems to come from thousands of legitimate servers.</p>`,
+      key:"Spoof the victim’s IP → the reflector’s reply floods the victim.",
+      task:"Set the spoofed source and send a request. Watch where the reply lands.",
+      hints:["First try the attacker’s own IP — the reply just comes back to them.","Then spoof the victim’s IP and watch the reply hit the victim."],
+      activity:a_reflect },
+    { title:"Amplification: multiplying the flood",
+      concept:`<p>Reflection gets far worse when the <b>reply is bigger than the request</b>. That’s <b>amplification</b>. A tiny query to a DNS, NTP or memcached server returns a huge response — all aimed at the victim.</p>
+        <p>The <b>amplification factor</b> is how many times larger the response is. Memcached has reached factors over ×50,000.</p>`,
+      key:"Amplification turns a trickle of attacker traffic into a torrent at the victim.",
+      task:"Pick a protocol, dial up the attacker’s bandwidth, and build a flood over 10 Gbps — then try memcached.",
+      hints:["Raise the bandwidth slider, or choose a higher-factor protocol.","Switch to memcached to see the factor explode."],
+      activity:a_ampcalc },
+    { title:"Working out the factor",
+      concept:`<p>The maths is simple but powerful: <b>amplification factor = response size ÷ request size</b>. A 60-byte request that triggers a 3,000-byte reply has a factor of 50 — the victim receives 50× what the attacker sent.</p>`,
+      key:"Factor = response ÷ request. Higher factor, bigger threat.",
+      task:"Work out the amplification factor in each case.",
+      hints:["Divide the response size by the request size.","A bigger ratio is a bigger threat for the same attacker bandwidth."],
+      activity:a_ampfactor },
+    { title:"Cutting it off at the source",
+      concept:`<p>Both reflection and amplification <b>depend on spoofing</b>. If networks refuse to forward packets whose source address isn’t really theirs — <b>ingress filtering</b>, known as <b>BCP 38</b> — the spoofed packets never leave, and the whole attack class collapses.</p>
+        <p>The catch: it only works if <b>enough</b> networks do it, which is why these attacks persist.</p>`,
+      key:"No spoofing, no reflection. BCP 38 stops it at the edge.",
+      task:"Enable ingress filtering and watch the spoofed packet get dropped before it can reflect.",
+      hints:["Turn the toggle on first.","Then send the spoofed request and see it blocked at the ISP edge."],
+      activity:a_ingress },
+    { title:"Layered defence",
+      concept:`<p>No single control stops every DoS. Real defence <b>layers</b> them: anti-spoofing (BCP 38) at the source, hardened and rate-limited servers so they can’t be used as reflectors, upstream <b>scrubbing</b> and CDN capacity to absorb volume, and app-aware limits for the clever low-volume attacks.</p>`,
+      key:"Defence in depth: anti-spoofing + hardened reflectors + scrubbing + capacity + app limits.",
+      task:"Choose the strongest defence for each situation.",
+      hints:["Reflection dies without spoofing.","Volumetric floods need upstream capacity to absorb them."],
+      activity:a_layered }
+  ]
+}
+];
+
+/* ---------- quiz ---------- */
+const QUIZ=[
+  {topic:"Lesson 1", q:"A denial-of-service attack mainly aims to…", o:["Steal the database","Exhaust a resource so real users can’t get service","Install a rootkit","Guess passwords"], a:1, ex:"DoS targets availability by exhausting resources, not by breaching data."},
+  {topic:"Lesson 1", q:"A volumetric flood (UDP/ICMP) primarily exhausts…", o:["The server’s CPU","The connection table","Network bandwidth","The password file"], a:2, ex:"Volumetric floods saturate the bandwidth / network pipe."},
+  {topic:"Lesson 1", q:"A SYN flood works by…", o:["Encrypting files","Leaving many half-open connections that fill the connection table","Sending huge replies","Guessing the admin password"], a:1, ex:"Unfinished handshakes tie up connection slots until the table is full."},
+  {topic:"Lesson 1", q:"Which defence specifically counters a SYN flood?", o:["SYN cookies","Longer passwords","Disabling the firewall","More monitors"], a:0, ex:"SYN cookies avoid reserving state for unfinished handshakes."},
+  {topic:"Lesson 1", q:"IP source-address spoofing lets an attacker…", o:["Make a faster CPU","Forge the sender so replies/blame go elsewhere","Read encrypted data","Add RAM to the victim"], a:1, ex:"Spoofing forges the source address, hiding the attacker and enabling reflection."},
+  {topic:"Lesson 2", q:"What distinguishes a DDoS from a DoS?", o:["It uses many machines (a botnet) at once","It is always encrypted","It never floods","It only targets databases"], a:0, ex:"Distribution across many sources is the defining feature of DDoS."},
+  {topic:"Lesson 2", q:"Why can’t you simply block the source IP in a DDoS?", o:["Blocking is illegal","The traffic comes from thousands of changing IPs","DDoS uses no IP addresses","The firewall is offline"], a:1, ex:"There’s no single source — blocking becomes whack-a-mole."},
+  {topic:"Lesson 2", q:"Application-layer attacks are dangerous because…", o:["They use the most bandwidth","Small, realistic requests force expensive server work","They never reach the server","They only affect printers"], a:1, ex:"Low-volume, legitimate-looking requests exhaust the app while evading volume filters."},
+  {topic:"Lesson 2", q:"Slowloris exhausts a server by…", o:["Flooding it with huge files","Holding many connections open slowly so the pool fills","Deleting the database","Overheating the CPU with maths"], a:1, ex:"It keeps connections barely alive, filling the connection pool with little bandwidth."},
+  {topic:"Lesson 2", q:"The best defence against a large volumetric DDoS is…", o:["A longer password","Upstream scrubbing / CDN capacity to absorb it","Turning off logging","A bigger monitor"], a:1, ex:"Volume must be absorbed or cleaned upstream before it reaches your link."},
+  {topic:"Lesson 3", q:"In a reflection attack, the attacker spoofs…", o:["The victim’s IP as the source, so replies go to the victim","Their own MAC address","The reflector’s password","The DNS root"], a:0, ex:"Spoofing the victim’s address makes innocent servers reply to the victim."},
+  {topic:"Lesson 3", q:"Amplification means…", o:["The reply is much larger than the request","The attack is encrypted","The victim is notified","The request repeats slowly"], a:0, ex:"A small request yields a large response, multiplying the flood."},
+  {topic:"Lesson 3", q:"If a 60-byte request yields a 3,000-byte reply, the amplification factor is about…", o:["50×","5×","0.02×"], a:0, ex:"3000 ÷ 60 = 50."},
+  {topic:"Lesson 3", q:"Both reflection and amplification depend on…", o:["Weak passwords","Source-address spoofing","Encrypted email","Physical access"], a:1, ex:"No spoofing means no reflection or amplification."},
+  {topic:"Lesson 3", q:"Ingress filtering (BCP 38) helps by…", o:["Dropping packets with forged source addresses at the network edge","Encrypting all traffic","Blocking all UDP forever","Speeding up DNS"], a:0, ex:"It refuses to forward spoofed packets, cutting these attacks off at the source."}
+];
+function gradeOf(sc){ if(sc>=13) return {g:"A",t:"Excellent"}; if(sc>=11) return {g:"B",t:"Very good"}; if(sc>=9) return {g:"C",t:"Pass"}; return {g:"–",t:"Needs revision"}; }
+
+/* ---------- shell ---------- */
+function renderTop(){
+  if(mode==="welcome"||!S.name){ topbar.innerHTML=`<div class="topbar-in"><div class="brand"><span class="brand-ic">⚡</span><span class="brand-t">Activity Lab<small>Common Security Threats</small></span></div></div>`; return; }
+  const n=doneCount(), inQuiz=mode==="quiz";
+  const initials=S.name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+  topbar.innerHTML=`<div class="topbar-in">
+    <button class="brand" id="tbHome" ${inQuiz?"disabled":""} aria-label="Map"><span class="brand-ic">⚡</span><span class="brand-t">Activity Lab<small>Common Security Threats</small></span></button>
+    <div class="tb-right"><span class="tb-steps"><b>${n}</b>/${TOTAL} done</span>
+      <div class="student"><b>${esc(S.name.split(" ")[0])}</b><small>${esc(S.roll)}</small></div>
+      ${inQuiz?`<span class="pill on">Quiz</span>`:`<button class="btn btn-quiet btn-sm" id="tbMap">Map</button>`}</div></div>`;
+  const home=document.getElementById("tbHome"), map=document.getElementById("tbMap");
+  if(home&&!inQuiz) home.addEventListener("click",()=>go(screenOverview));
+  if(map) map.addEventListener("click",()=>go(screenOverview));
+}
+function go(fn,...a){ fn(...a); renderTop(); try{ window.scrollTo(0,0); }catch(e){} }
+
+function screenWelcome(){
+  mode="welcome"; const has=!!S.name;
+  app.innerHTML=`<section class="screen stack">
+    <div class="bare"><div class="eyebrow">Interactive lab · beginner</div>
+      <h1>Common Security Threats</h1>
+      <p class="lead">Denial of service: exhausting a target’s resources rather than breaching it — flooding attacks, distributed attacks, application-layer attacks, and reflection and amplification.</p>
+      <ul class="facts"><li>3 lessons · 15 hands-on simulations</li><li>Live meters, packet triage, botnet scaler and an amplification calculator</li><li>Free hints at every step</li><li>Final quiz worth 15 marks</li></ul>
+    </div>
+    <div class="card" id="who"></div></section>`;
+  const who=document.getElementById("who");
+  if(has){ who.innerHTML=`<h3>Welcome back, ${esc(S.name.split(" ")[0])}</h3><p class="muted">Roll no. ${esc(S.roll)} · ${doneCount()}/${TOTAL} done${S.results.length?` · quiz ${S.results.length}×`:""}.</p>
+    <div class="row wrap"><button class="btn" id="cont">Continue</button><button class="btn btn-quiet" id="newst">Different student</button></div>`;
+    document.getElementById("cont").addEventListener("click",()=>go(screenOverview));
+    document.getElementById("newst").addEventListener("click",()=>{ S=fresh(); save(); go(screenWelcome); });
+  } else { who.innerHTML=`<h3>Before you begin</h3><p class="muted small">Your name and roll number appear on your result card.</p>
+    <div class="who-grid"><div class="field"><label for="nm">Full name</label><input class="input" id="nm" maxlength="60" autocomplete="name" placeholder="e.g. Umair Shaikh"></div>
+    <div class="field"><label for="rl">Roll number</label><input class="input" id="rl" maxlength="30" autocomplete="off" placeholder="e.g. 23CS046"></div></div>
+    <div class="err" id="err" aria-live="polite"></div><button class="btn" id="startBtn" style="margin-top:4px">Start</button>`;
+    const nm=document.getElementById("nm"), rl=document.getElementById("rl"), err=document.getElementById("err");
+    function start(){ const n=nm.value.trim().replace(/\s+/g," "), r=rl.value.trim();
+      if(n.length<2){ err.textContent="Enter your full name."; nm.focus(); return; }
+      if(r.length<2){ err.textContent="Enter your roll number."; rl.focus(); return; }
+      if(!/^[A-Za-z0-9\-\/_. ]+$/.test(r)){ err.textContent="Letters, numbers, dashes, slashes and dots only."; rl.focus(); return; }
+      S=fresh(); S.name=n; S.roll=r; save(); go(screenOverview); }
+    document.getElementById("startBtn").addEventListener("click",start);
+    [nm,rl].forEach(x=>x.addEventListener("keydown",e=>{ if(e.key==="Enter") start(); })); nm.focus();
+  }
+}
+function modInfo(m){ const cnt=[0,1,2,3,4].filter(i=>S.done[m*5+i]).length; const unlocked=m===0||S.maxPos>=m*5-1; const started=S.maxPos>=m*5;
+  let target=m*5; for(let i=0;i<5;i++){ if(!S.done[m*5+i]){ target=m*5+i; break; } } if(target>S.maxPos+1) target=Math.max(m*5,Math.min(S.maxPos,m*5+4)); return {cnt,unlocked,started,target}; }
+
+function screenOverview(){
+  mode="map"; const quizOpen=S.maxPos>=14, res=S.results, best=res.length?Math.max(...res.map(r=>r.score)):null;
+  app.innerHTML=`<section class="screen stack">
+    <div class="bare"><div class="eyebrow">Overview</div><h2>What this is about</h2>
+      <p>Not every attack tries to steal or break in. The most disruptive ones simply <b>overwhelm</b> — flooding a server until real users can’t reach it. This lab lets you <b>run the attacks yourself</b> in a safe simulator: overload a server, fill a connection table, scale a botnet, bounce traffic off reflectors and watch amplification multiply a trickle into a torrent — then deploy the defences that stop each one.</p>
+      <p class="small muted">Everything is simulated — no real traffic leaves your browser.</p></div>
+    <div class="card"><h3>By the end, you can…</h3><ul class="obj">
+      <li>Explain what a DoS attack exhausts, and why availability is the target.</li>
+      <li>Tell volumetric, protocol and application-layer floods apart.</li>
+      <li>Explain SYN floods, spoofing, and SYN cookies.</li>
+      <li>Describe DDoS, botnets, and why blocking one IP fails.</li>
+      <li>Explain Slowloris and application-layer cost asymmetry.</li>
+      <li>Explain reflection, amplification factors, and BCP 38.</li></ul></div>
+    <div class="bare"><h3>Lessons</h3><div class="path" id="path"></div></div>
+    <div class="card"><h3>Marking</h3>
+      <table class="marks"><thead><tr><th>Part</th><th>Detail</th><th>Marks</th></tr></thead><tbody>
+        <tr><td>Activities</td><td>15 hands-on simulations</td><td>Shown on your card</td></tr>
+        <tr><td>Final quiz</td><td>15 questions, 1 mark each</td><td>15 marks</td></tr>
+        <tr><td>Pass</td><td>9 / 15 · A 13–15 · B 11–12 · C 9–10</td><td>—</td></tr>
+      </tbody></table>
+      <p class="small muted" style="margin-top:8px">The quiz unlocks at the end of Lesson 3 — shuffled, no hints, answers lock on submit.</p></div></section>`;
+  const path=document.getElementById("path");
+  MODULES.forEach((mod,m)=>{ const info=modInfo(m); const label=!info.unlocked?"Locked":info.cnt===5?"Review":info.started?"Continue":"Start";
+    const c=block(`<div class="pcard ${info.unlocked?"":"locked"}"><div class="pnum">${m+1}</div>
+      <div><div class="ptitle">${mod.title}</div><div class="pmeta">${mod.blurb} · ${info.cnt}/5 done</div></div>
+      <button class="btn ${info.cnt===5?"btn-ghost":""} btn-sm" ${info.unlocked?"":"disabled"}>${label}</button></div>`).firstElementChild;
+    c.querySelector("button").addEventListener("click",()=>go(screenStep,info.target)); path.appendChild(c); });
+  const q=block(`<div class="pcard quiz ${quizOpen?"":"locked"}"><div class="pnum">★</div>
+    <div><div class="ptitle">Final quiz</div><div class="pmeta">15 questions · 1 mark each${res.length?` · best ${best}/15`:""}</div></div>
+    <button class="btn btn-sm" ${quizOpen?"":"disabled"}>${quizOpen?(res.length?"Retake":"Start"):"Locked"}</button></div>`).firstElementChild;
+  q.querySelector("button").addEventListener("click",()=>go(screenQuizIntro)); path.appendChild(q);
+}
+
+function screenStep(pos){
+  mode="step"; const m=Math.floor(pos/5), s=pos%5, mod=MODULES[m], st=mod.steps[s];
+  if(pos>S.maxPos){ S.maxPos=pos; save(); }
+  const done=!!S.done[pos]; const nextLabel=d=>d?(s<4?"Continue":"Finish lesson"):"Skip";
+  app.innerHTML=`<section class="screen stack">
+    <div class="bare"><div class="crumbs"><span class="pill">Lesson ${m+1}</span><span>${mod.short}</span><span>·</span><span>Step ${s+1} of 5</span></div>
+      <h2>${st.title}</h2><div class="rail" style="margin-top:10px"><i style="width:${(s+1)/5*100}%"></i></div></div>
+    <div class="bare">${st.concept}<div class="key">🔑 <b>Key idea:</b> ${st.key}</div></div>
+    <div class="actwrap ${done?"done":""}" id="act">
+      <div class="act-top"><span class="act-label">Simulation</span><span class="badge">✓ Completed</span></div>
+      <p class="task">${st.task}</p><div id="body"></div>
+      <div class="hintarea"><button class="btn btn-quiet btn-sm" id="hintBtn">💡 Hint</button><div id="hints"></div></div></div>
+    <div class="stepnav"><button class="btn btn-quiet btn-sm" id="back">◂ Back</button><div class="dots" id="dots" aria-hidden="true"></div>
+      <button class="btn btn-sm ${done?"":"btn-ghost"}" id="next">${nextLabel(done)} ▸</button></div></section>`;
+  const act=document.getElementById("act"), nextBtn=document.getElementById("next");
+  function dots(){ document.getElementById("dots").innerHTML=[0,1,2,3,4].map(i=>`<i class="${i===s?"on":""} ${S.done[m*5+i]?"ok":""}"></i>`).join(""); }
+  dots();
+  const api={ complete(){ if(!S.done[pos]){ S.done[pos]=true; save(); } act.classList.add("done"); nextBtn.classList.remove("btn-ghost"); nextBtn.textContent=nextLabel(true)+" ▸"; dots(); renderTop(); } };
+  let hi=0; const hb=document.getElementById("hintBtn"), hbox=document.getElementById("hints");
+  hb.addEventListener("click",()=>{ if(hi>=st.hints.length) return; hbox.appendChild(block(`<div class="hintbox"><b>Hint ${hi+1}/${st.hints.length}:</b> ${st.hints[hi]}</div>`).firstElementChild); hi++; if(hi>=st.hints.length){ hb.disabled=true; hb.textContent="No more hints"; } });
+  try{ st.activity(document.getElementById("body"),api); }catch(e){ console.error(e); }
+  document.getElementById("back").addEventListener("click",()=>go(s>0?()=>screenStep(pos-1):screenOverview));
+  nextBtn.addEventListener("click",()=>go(s<4?()=>screenStep(pos+1):()=>screenModuleDone(m)));
+}
+
+function screenModuleDone(m){
+  mode="done"; const mod=MODULES[m], cnt=[0,1,2,3,4].filter(i=>S.done[m*5+i]).length;
+  app.innerHTML=`<section class="screen stack">
+    <div class="bare done-head"><div class="check">✓</div><h2>Lesson ${m+1} complete</h2><p class="muted">${mod.title} · ${cnt} of 5 simulations</p></div>
+    <div class="card"><h3>What you learned</h3><ul class="take">${mod.takeaways.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+    ${cnt<5?`<p class="muted small center">You skipped ${5-cnt}. You can return any time from the map.</p>`:""}
+    <div class="row wrap center"><button class="btn btn-quiet btn-sm" id="toMap">Map</button><button class="btn btn-sm" id="nextMod">${m<2?`Start Lesson ${m+2}`:"Final quiz"} ▸</button></div></section>`;
+  document.getElementById("toMap").addEventListener("click",()=>go(screenOverview));
+  document.getElementById("nextMod").addEventListener("click",()=>go(m<2?()=>screenStep((m+1)*5):screenQuizIntro));
+}
+
+let Q=null;
+function screenQuizIntro(){ mode="map"; const n=doneCount();
+  app.innerHTML=`<section class="screen card"><div class="eyebrow">Final quiz</div><h2>Ready, ${esc(S.name.split(" ")[0])}?</h2>
+    <table class="marks" style="margin:12px 0"><tbody>
+      <tr><th>Questions</th><td>15, from all three lessons</td></tr><tr><th>Marks</th><td>1 each — 15 total</td></tr>
+      <tr><th>Pass</th><td>9 / 15</td></tr><tr><th>Rules</th><td>No hints · shuffled · answers lock on submit</td></tr>
+      <tr><th>Attempt</th><td>#${S.results.length+1}${S.results.length?` · first was ${S.results[0].score}/15`:""}</td></tr></tbody></table>
+    ${n<TOTAL?`<div class="fb">You’ve done ${n}/${TOTAL} simulations. Finishing them first will help.</div>`:`<div class="fb good">All 15 simulations done — well prepared.</div>`}
+    <div class="row wrap" style="margin-top:14px"><button class="btn btn-quiet btn-sm" id="qback">Map</button><button class="btn btn-sm" id="qgo">Start ▸</button></div></section>`;
+  document.getElementById("qback").addEventListener("click",()=>go(screenOverview));
+  document.getElementById("qgo").addEventListener("click",()=>{ Q={ qs:shuffle(QUIZ).map(q=>Object.assign({},q,{order:shuffle([0,1,2].concat(q.o.length>3?[3]:[]))})), i:0, score:0, answers:[], start:Date.now() }; go(screenQuestion); });
+}
+function screenQuestion(){ mode="quiz"; const q=Q.qs[Q.i]; let sel=null, locked=false;
+  app.innerHTML=`<section class="screen card"><div class="row between"><span class="pill">Q${Q.i+1}/${Q.qs.length}</span><span class="pill">Score ${Q.score}</span></div>
+    <div class="rail" style="margin-top:10px"><i style="width:${Q.i/Q.qs.length*100}%"></i></div>
+    <p class="small muted" style="margin:12px 0 0">${q.topic}</p><h3 class="qprompt">${q.q}</h3>
+    <div class="qopts">${q.order.map((oi,k)=>`<button class="qopt" data-oi="${oi}"><span class="ltr">${"ABCD"[k]}</span><span>${q.o[oi]}</span></button>`).join("")}</div>
+    <div id="qfb" aria-live="polite"></div><div class="row end" style="margin-top:14px"><button class="btn btn-sm" id="qsub" disabled>Submit</button></div></section>`;
+  const sub=document.getElementById("qsub"), btns=app.querySelectorAll(".qopt");
+  btns.forEach(b=>b.addEventListener("click",()=>{ if(locked) return; btns.forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel=+b.dataset.oi; sub.disabled=false; }));
+  sub.addEventListener("click",()=>{ if(!locked){ if(sel===null) return; locked=true; const ok=sel===q.a; if(ok) Q.score++;
+      Q.answers.push({q:q.q,chosen:q.o[sel],correct:q.o[q.a],ok,ex:q.ex});
+      btns.forEach(x=>{ x.disabled=true; const oi=+x.dataset.oi; if(oi===q.a) x.classList.add("right"); else if(oi===sel) x.classList.add("wrong"); x.classList.remove("sel"); });
+      document.getElementById("qfb").innerHTML=`<div class="fb ${ok?"good":"bad"}"><b>${ok?"Correct. +1":"Not quite."}</b> ${q.ex}</div>`;
+      sub.textContent=Q.i+1<Q.qs.length?"Next ▸":"See result";
+    } else if(Q.i+1<Q.qs.length){ Q.i++; go(screenQuestion); } else finishQuiz(); });
+}
+function finishQuiz(){ const r={ score:Q.score, total:15, pct:Math.round(Q.score/15*100), ms:Date.now()-Q.start, date:new Date().toISOString(), attempt:S.results.length+1, activities:doneCount() }; S.results.push(r); save(); go(screenResult,r,Q.answers); }
+function screenResult(r,answers){ mode="result"; const g=gradeOf(r.score), pass=r.score>=9;
+  const mins=Math.floor(r.ms/60000), secs=Math.round((r.ms%60000)/1000), when=new Date(r.date).toLocaleString();
+  const text=`Common Security Threats — Activity Result
+Name: ${S.name}
+Roll no.: ${S.roll}
+Quiz: ${r.score}/15 (${r.pct}%) — Grade ${g.g} (${g.t}) — ${pass?"PASS":"Needs revision"}
+Activities: ${r.activities}/15
+Attempt: ${r.attempt} · ${mins}m ${secs}s · ${when}`;
+  app.innerHTML=`<section class="screen stack">
+    <div class="card"><div class="row between"><span class="eyebrow" style="margin:0">Result</span><span class="pill">Attempt ${r.attempt}</span></div>
+      <h2 style="margin:8px 0 14px">Common Security Threats result</h2>
+      <div class="ring" style="--p:${r.pct}"><div><div><b>${r.score}</b><span>of 15</span></div></div></div>
+      <div class="kv"><div><small>Student</small><b>${esc(S.name)}</b></div><div><small>Roll no.</small><b>${esc(S.roll)}</b></div>
+        <div><small>Grade</small><b>${g.g} — ${g.t}</b></div><div><small>Status</small><b class="${pass?"status-pass":"status-fail"}">${pass?"Pass":"Needs revision"}</b></div>
+        <div><small>Activities</small><b>${r.activities} / 15</b></div><div><small>Time</small><b>${mins}m ${secs}s</b></div></div>
+      <p class="small muted" style="margin-top:12px">Screenshot this card or copy the text for your teacher.</p>
+      <div class="row wrap"><button class="btn btn-sm" id="copy">Copy result</button><button class="btn btn-quiet btn-sm" id="retake">Retake</button><button class="btn btn-quiet btn-sm" id="rmap">Map</button></div><div id="ca"></div></div>
+    <div class="card"><h3>Review</h3><ul class="review">${answers.map(a=>`<li><b>${a.q}</b><br><span class="${a.ok?"yes":"no"}">${a.ok?"✓":"✗"} Your answer: ${a.chosen}</span>${a.ok?"":`<br><span class="yes">✓ Correct: ${a.correct}</span>`}<div class="small muted" style="margin-top:3px">${a.ex}</div></li>`).join("")}</ul></div></section>`;
+  const copyBtn=document.getElementById("copy");
+  copyBtn.addEventListener("click",()=>{ const fb=()=>{ const ca=document.getElementById("ca"); ca.innerHTML=`<textarea class="copybox" readonly></textarea>`; const ta=ca.querySelector("textarea"); ta.value=text; ta.focus(); ta.select(); };
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(()=>{ copyBtn.textContent="Copied"; setTimeout(()=>copyBtn.textContent="Copy result",2000); }).catch(fb); else fb(); }catch(e){ fb(); } });
+  document.getElementById("retake").addEventListener("click",()=>go(screenQuizIntro));
+  document.getElementById("rmap").addEventListener("click",()=>go(screenOverview));
+}
+
+load();
+go(screenWelcome);
+})();
+</script>
+</body>
+</html>
